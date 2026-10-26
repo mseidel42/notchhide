@@ -10,6 +10,7 @@ Built as a replacement for TopNotch, which no longer works on newer macOS releas
 
 - Lives in the menubar. No Dock icon.
 - Detects the current wallpaper and applies the black bar automatically.
+- Supports both static images and dynamic HEIC wallpapers (solar, 24-hour time, and light/dark wallpapers).
 - Optional auto-apply: re-processes when the wallpaper, Space, or display configuration changes.
 - Works per display. Apply to the internal display only (default) or to all connected displays.
 - Optional rounded corners: 28px black corners on all four corners of the wallpaper, with the top corners curving just below the black bar.
@@ -53,15 +54,16 @@ Because the app is ad-hoc signed, Gatekeeper may block the first launch. Right-c
 
 1. `NSWorkspace.desktopImageURL(for:)` returns the current wallpaper for each target screen.
 2. The image is aspect-fill cropped to the screen's pixel size, and a black bar is drawn across the top. The bar height is the menu bar height (`frame.maxY - visibleFrame.maxY`).
-3. The result is written to `~/Library/Application Support/NotchHide/processed/` under a hashed filename. A new filename per source image forces macOS to refresh instead of using its cached copy.
-4. `NSWorkspace.setDesktopImageURL(_:for:options:)` applies it. The original wallpaper path is stored so it can be restored.
-5. Wallpapers that are already NotchHide output are skipped, so it never re-processes its own result.
+3. For multi-frame dynamic wallpapers (HEIC), every frame is processed and encoded into a dynamic HEIC while preserving Apple's dynamic metadata (solar, 24h, and light/dark appearance schedule). Still images are encoded as PNG.
+4. The result is written to `~/Library/Application Support/NotchHide/processed/` under a hashed filename. A new filename per source image forces macOS to refresh instead of using its cached copy.
+5. `NSWorkspace.setDesktopImageURL(_:for:options:)` applies it. The original wallpaper path is stored so it can be restored.
+6. Wallpapers that are already NotchHide output are skipped, so it never re-processes its own result.
 
 macOS has no public notification for wallpaper changes, so auto-apply also polls every 3 seconds in addition to listening for Space and display changes. The check is a cheap URL comparison.
 
 ## Limitations
 
-- Dynamic, Aerial, and video wallpapers are not supported. Only still images can be processed, and the status line reports an error otherwise.
+- Aerial and video wallpapers (macOS Sonoma/Sequoia video screensavers) are not supported because they are streamed video rather than still/multi-frame images. Dynamic HEIC wallpapers are fully supported.
 - Wallpapers are set per Space. Each Space with its own wallpaper is processed when you switch to it (auto-apply) or click Hide Notch Now.
 - The image is processed with aspect-fill. If your wallpaper was set to Fit or Center in System Settings, the layout changes slightly.
 - External displays have no notch, so the bar there only matches the look of the internal display.
